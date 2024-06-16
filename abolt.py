@@ -35,8 +35,8 @@ def savetrajectory(fname, XX, YY, namex = "X", namey = "Y"):
 
 def boltsolver(li, le, R):
 
-    Ny = 200
-    NPhi = 240
+    Ny = 3800
+    NPhi = 48
     
     EF = 1
     dy = 1 / (Ny - 1)
@@ -90,11 +90,11 @@ def boltsolver(li, le, R):
             
             coorow.append( idxs(k  , n) )
             coocol.append( idxs(k, n + 1) )
-            cooData.append( 1  / (R * dphi))
+            cooData.append( 1  / (R * 2 *dphi))
             
             coorow.append( idxs(k  , n) )
-            coocol.append( idxs(k, n ) )
-            cooData.append( - 1  / (R * dphi))
+            coocol.append( idxs(k, n-1 ) )
+            cooData.append( - 1  / (R *2* dphi))
     
             coorow.append( idxs(k  , n) )
             coocol.append( idxs(k, n ) )
@@ -171,11 +171,11 @@ def boltsolver(li, le, R):
         
         coorow.append( idxs(0  , n) )
         coocol.append( idxs(0, n + 1) )
-        cooData.append( 1  / (R * dphi))
+        cooData.append( 1  / (R * 2* dphi))
         
         coorow.append( idxs(0  , n) )
-        coocol.append( idxs(0, n ) )
-        cooData.append( - 1  / (R *dphi))
+        coocol.append( idxs(0, n-1 ) )
+        cooData.append( - 1  / (R *2*dphi))
     
         coorow.append( idxs(0  , n) )
         coocol.append( idxs(0, n ) )
@@ -208,11 +208,11 @@ def boltsolver(li, le, R):
         
         coorow.append( idxs(Ny-1  , n) )
         coocol.append( idxs(Ny-1, n + 1) )
-        cooData.append( 1  / (R * dphi))
+        cooData.append( 1  / (R * 2*dphi))
         
         coorow.append( idxs(Ny-1  , n) )
-        coocol.append( idxs(Ny-1, n ) )
-        cooData.append( - 1  / (R * dphi))
+        coocol.append( idxs(Ny-1, n-1 ) )
+        cooData.append( - 1  / (R * 2*dphi))
     
         coorow.append( idxs(Ny-1  , n) )
         coocol.append( idxs(Ny-1, n ) )
@@ -317,7 +317,7 @@ for le in LEE:
 """    
 
 for wr in WR:    
-    leff, Resist, q, IY, JY = boltsolver(li, le, -1/wr)
+    leff, Resist, q, IY, JY = boltsolver(li, le, 1/wr)
     LEFF.append(Resist)
 
 savetrajectory("Raich1.csv", WR, LEFF)   
