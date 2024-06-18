@@ -23,6 +23,10 @@ import time
 import argparse
 import csv
 
+import os
+import time
+import argparse  
+
 
 def savetrajectory(fname, XX, YY, namex = "X", namey = "Y"):
     with open(fname, mode='w') as test_file:
@@ -33,18 +37,11 @@ def savetrajectory(fname, XX, YY, namex = "X", namey = "Y"):
 
 
 
-def boltsolver(li, le, R):
-
-    Ny = 3800
-    NPhi = 48
+def boltsolver(li, le, R = 10**10, alpha=10**10, Ny=200, NPhi = 24):
     
     EF = 1
     dy = 1 / (Ny - 1)
-    dphi = 2*pi / NPhi
-    
-
-    
-    alpha = 100000000
+    dphi = 2*pi / NPhi            
     
     Y = linspace(0, 1, Ny)
     PHI = linspace(0, 2*pi - dphi, NPhi)
@@ -86,7 +83,7 @@ def boltsolver(li, le, R):
     
             coorow.append( idxs(k  , n) )
             coocol.append( idxs(k-1, n) )
-            cooData.append(- sin(PHI[n%NPhi]) / (2*dy))
+            cooData.append(- sin(PHI[n%NPhi]) / (2*dy))            
             
             coorow.append( idxs(k  , n) )
             coocol.append( idxs(k, n + 1) )
@@ -293,31 +290,109 @@ def boltsolver(li, le, R):
     
     charge = sum(n)
     
+    Eprime = A * chi
+    
+    err = sum(abs(Eprime - E))
+    
     print("I = ", I, "R / R_0 = ", RR, "Charge = ", charge, "IY = ", IY)
     
-    return I, RR, charge, IY, JY
+    print ("err = ", err/Ny/NPhi)
+    
+    return I, RR, charge, IY, JY, err
 
 
-LEE = [100, 10, 1, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001]
+if __name__ == '__main__':
+    
+    # ---------- MAIN NAME is here --------------
+    
+    projectname = "r1"
+    
+    # -------------------------------------------
+    
+    FOLDER = projectname + '/'
+    
+    Calc_name = projectname
+    
+    mainfname = FOLDER + Calc_name + ".csv"
+    
+    if os.path.exists(FOLDER)==False:
+        try:
+            os.mkdir(FOLDER)
+            print ("make dir...", flush=True)
+        except:
+            print ("already exists...", flush=True)
 
-li = 3
-
-LEFF = []
-
-WR = [0.00000001, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.3]
-
-le = 100000000000
-
-R = 1000000000000
-
-"""
-for le in LEE:    
-    leff, Resist = boltsolver(li, le, R)
-    LEFF.append(leff)
-"""    
-
-for wr in WR:    
-    leff, Resist, q, IY, JY = boltsolver(li, le, 1/wr)
-    LEFF.append(Resist)
-
-savetrajectory("Raich1.csv", WR, LEFF)   
+    if os.path.exists(mainfname)==False:
+        with open(mainfname, mode='w') as test_file:
+            test_writer = csv.writer(test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            header = []
+            header.append(projectname+"_W/R")
+            header.append(projectname+"_li")
+            header.append(projectname+"_lee")
+            header.append(projectname+"_R/R0")
+            header.append(projectname+"_Leff")
+            
+            test_writer.writerow(header)    
+    
+    
+    print ("Command line arguments: ", len(argv))
+    
+    parser = argparse.ArgumentParser(description="Sorting CSV files with any column. Save as \"sorted__\"+initial filename",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument("jobid", help="jobid")
+    
+    args = parser.parse_args()
+    
+    conf = vars(args)
+    
+    print(conf)
+    
+    
+    # ------------- our only parameter from command line --------------------    
+    i = int(conf["jobid"]) - 1    
+    # -----------------------------------------------------------------------
+    
+    
+    LEE = [100, 33.3, 10, 3.33, 1, 0.333, 0.1, 0.033, 0.01, 0.0033, 0.001]        
+    
+    LEFF = []
+    
+    WR = [0.00000001, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.3, 6]
+    
+    le = 100000000000000
+    
+    R = 1000000000000
+    
+    
+    # ------------ parameters for calculation ------------------
+    
+    li = 3
+    
+    wr = WR[i]
+    
+    le = 10**10
+    
+    alpha = 10*10
+    
+    # ------------ MAIN CALCULATION ----------------------------
+            
+    leff, Resist, q, IY, JY, err = boltsolver(li, le, 1/wr, alpha, Ny=30, NPhi = 500 )
+    
+    # ----------------------------------------------------------
+    
+    
+    # ------ Saving the result ---------------------------------
+    
+    
+    with open(mainfname, mode='a') as test_file:
+        test_writer = csv.writer(test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                                               
+        srow = []
+                    
+        srow.append (str(wr))                            
+        srow.append(str( li ))            
+        srow.append(str( le ))
+        srow.append(str( Resist))
+        srow.append(str( leff ))
+        test_writer.writerow(srow)          
