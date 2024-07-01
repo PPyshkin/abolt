@@ -46,6 +46,10 @@ def boltsolver(li, le, R = 10**10, alpha=10**10, Ny=200, NPhi = 24):
     Y = linspace(0, 1, Ny)
     PHI = linspace(0, 2*pi - dphi, NPhi)
     
+    COSPHI = cos(PHI)
+    
+    SINPHI = sin(PHI)
+    
     
     l = le * li / (le + li)
     
@@ -79,20 +83,33 @@ def boltsolver(li, le, R = 10**10, alpha=10**10, Ny=200, NPhi = 24):
         for n in range(0, NPhi):
             coorow.append( idxs(k  , n) )
             coocol.append( idxs(k+1, n) )
-            cooData.append(sin(PHI[n%NPhi]) / (2*dy))
+            cooData.append(SINPHI[n%NPhi] / (2*dy))
     
             coorow.append( idxs(k  , n) )
             coocol.append( idxs(k-1, n) )
-            cooData.append(- sin(PHI[n%NPhi]) / (2*dy))            
+            cooData.append(- SINPHI[n%NPhi] / (2*dy))            
             
-            coorow.append( idxs(k  , n) )
-            coocol.append( idxs(k, n + 1) )
-            cooData.append( 1  / (R * 2 *dphi))
+            if n<NPhi/2:
             
-            coorow.append( idxs(k  , n) )
-            coocol.append( idxs(k, n-1 ) )
-            cooData.append( - 1  / (R *2* dphi))
-    
+                coorow.append( idxs(k  , n) )
+                coocol.append( idxs(k, n ) )
+                cooData.append( 1  / (R * dphi))
+                
+                coorow.append( idxs(k  , n) )
+                coocol.append( idxs(k, n-1 ) )
+                cooData.append( - 1  / (R * dphi))
+            
+            else:
+
+                coorow.append( idxs(k  , n) )
+                coocol.append( idxs(k, n+1 ) )
+                cooData.append( 1  / (R * dphi))
+                
+                coorow.append( idxs(k  , n) )
+                coocol.append( idxs(k, n ) )
+                cooData.append( - 1  / (R * dphi))
+                
+
             coorow.append( idxs(k  , n) )
             coocol.append( idxs(k, n ) )
             cooData.append( 1  / (l))
@@ -109,7 +126,7 @@ def boltsolver(li, le, R = 10**10, alpha=10**10, Ny=200, NPhi = 24):
             for m in range(NPhi):
                 coorow.append( idxs(k  , n) )
                 coocol.append( idxs(k, m ) )
-                cooData.append( - dphi * cos(PHI[m%NPhi]) * cos(PHI[n%NPhi])  / (pi * le) )
+                cooData.append( - dphi * COSPHI[m%NPhi] * COSPHI[n%NPhi]  / (pi * le) )
     
     
     # bottom boundary 
@@ -236,9 +253,11 @@ def boltsolver(li, le, R = 10**10, alpha=10**10, Ny=200, NPhi = 24):
             E[idxs(k, n)] = EF * cos(PHI[n])
     
     
-    main_coo_matrix = coo_array((cooData, (coorow, coocol)), shape=(Ny*NPhi, Ny*NPhi))
+    #main_coo_matrix = coo_array((cooData, (coorow, coocol)), shape=(Ny*NPhi, Ny*NPhi))
         
-    A = csr_matrix(main_coo_matrix)
+    #A = csr_matrix(main_coo_matrix)
+    
+    A = csr_matrix((cooData, (coorow, coocol)), shape=(Ny*NPhi, Ny*NPhi))
     
     print ("Matrix is ready, starting to solve...", flush = True)
     # ============== MAIN SOLVER ==================================
@@ -305,7 +324,7 @@ if __name__ == '__main__':
     
     # ---------- MAIN NAME is here --------------
     
-    projectname = "r1"
+    projectname = "raph08"
     
     # -------------------------------------------
     
@@ -354,7 +373,7 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------------
     
     
-    LEE = [100, 33.3, 10, 3.33, 1, 0.333, 0.1, 0.033, 0.01, 0.0033, 0.001]        
+    LEE = [100, 57.7, 33.3, 19.05, 10, 5.77, 3.33, 1.92, 1, 0.577, 0.333, 0.19, 0.1, 0.577, 0.033, 0.019, 0.01, 0.0057, 0.0033, 0.0019, 0.001]        
     
     LEFF = []
     
@@ -367,17 +386,19 @@ if __name__ == '__main__':
     
     # ------------ parameters for calculation ------------------
     
-    li = 3
     
-    wr = WR[i]
     
-    le = 10**10
+    wr = 0.000000000000001
     
-    alpha = 10*10
+    le = LEE[i]
+    
+    li = 2 * sqrt(le)
+    
+    alpha = 1
     
     # ------------ MAIN CALCULATION ----------------------------
             
-    leff, Resist, q, IY, JY, err = boltsolver(li, le, 1/wr, alpha, Ny=30, NPhi = 500 )
+    leff, Resist, q, IY, JY, err = boltsolver(li, le, 1/wr, alpha, Ny=300, NPhi = 200 )
     
     # ----------------------------------------------------------
     
